@@ -1,0 +1,57 @@
+# central config so I don't have magic numbers scattered across the codebase
+# keeping it flat-ish on purpose, easier to override single values from CLI later
+
+project:
+  name: "industrial-defect-detection"
+  seed: 42
+  device: "cuda"   # falls back to cpu automatically if cuda isn't available, see utils/device.py
+
+data:
+  root_dir: "data/mvtec"          # expects MVTec-AD style layout, see scripts/download_mvtec.py
+  category: "bottle"              # which product category to train on (bottle, cable, capsule, etc.)
+  image_size: 256
+  crop_size: 224
+  batch_size: 32
+  num_workers: 4
+  val_split: 0.15                 # carved out of the "good" training samples
+  normalize_mean: [0.485, 0.456, 0.406]   # imagenet stats, backbone is pretrained on it
+  normalize_std: [0.229, 0.224, 0.225]
+
+model:
+  backbone: "resnet34"            # resnet18 / resnet34 / resnet50 supported, see models/classifier.py
+  pretrained: true
+  freeze_backbone_layers: 2       # freeze first N layers, only fine-tune the rest, saves time on small datasets
+  dropout: 0.3
+  num_classes: 2                  # binary: good vs defective (per-defect-type head is separate, see below)
+
+autoencoder:
+  latent_dim: 256
+  base_channels: 32
+
+patchcore:
+  backbone: "wide_resnet50_2"
+  layers: ["layer2", "layer3"]
+  coreset_ratio: 0.1              # keep 10% of patch features after greedy coreset subsampling
+  num_neighbors: 9
+
+training:
+  epochs: 40
+  lr: 0.0003
+  weight_decay: 0.00001
+  optimizer: "adamw"
+  scheduler: "cosine"
+  early_stopping_patience: 7
+  mixed_precision: true
+  checkpoint_dir: "checkpoints"
+  log_dir: "runs"
+  save_every: 5
+
+evaluation:
+  threshold: 0.5                  # decision threshold for anomaly score -> label, tuned in evaluate.py
+  metrics: ["auroc", "f1", "precision", "recall", "accuracy"]
+  report_dir: "reports"
+
+inference:
+  checkpoint_path: "checkpoints/best_model.pt"
+  batch_size: 1
+  return_heatmap: true

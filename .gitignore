@@ -1,0 +1,35 @@
+# python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+build/
+dist/
+
+# data & artifacts - these get regenerated, no reason to bloat the repo
+data/
+checkpoints/
+runs/
+reports/
+logs/
+*.pt
+*.pth
+*.tar.xz
+
+# jupyter
+.ipynb_checkpoints/
+
+# os junk
+.DS_Store
+Thumbs.db
+
+# editors
+.vscode/
+.idea/
+*.swp
+
+# env vars / secrets, just in case
+.env
